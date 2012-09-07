@@ -1,2 +1,0 @@
-[TEST]This is a file synchonizer written in python, intentially to compare and sync two folder with big files.
-This script only check files' size and mtime, in order to compare large file quickly.

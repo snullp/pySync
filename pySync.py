@@ -3,7 +3,7 @@
 import sys, shutil, os, time
 from os.path import getsize,getmtime 
 
-deffolder=['Download','Big music','Books','CS&IT','ENGstudy','Image Collection','My photos','My Pictures','Soft','Video collection','Workshop']
+deffolder=['Download','Big music','Books','CS&IT','ENGstudy','Image Collection','My photos','My Pictures','Soft','Video collection','Archives']
 
 def compare(fa,fb):
     if os.path.isfile(fa)==os.path.isfile(fb):
