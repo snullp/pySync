@@ -1,6 +1,8 @@
 # pySync
-## A quick data depository synchonizer
+## A quick data repository synchonizer
 This is a file synchonizer written in python, intentially to compare and sync two folder with big and static files.
+
+Please copy pySync.ini.example to pySync.ini to config the repo. Also, config your local repo in ~/.pysync.
 
 It has following features:
 

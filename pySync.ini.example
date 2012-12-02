@@ -1,0 +1,12 @@
+#This file defines a repo
+#Please copy this file to your home folder and rename it .pysync
+#to config your local repo
+
+#Only shared sync name in two repos will be synced
+
+[External Harddisk] #repo name
+#BASE = You can set another base folder other than the default value
+#sync name: real path
+picture: My Pictures
+download: Download
+archive: Archives
