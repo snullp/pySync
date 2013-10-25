@@ -1,7 +1,9 @@
-#!/usr/bin/python
+#!/usr/local/bin/python3
 
 import sys, shutil, os, time, configparser
 from os.path import *
+
+ignoreFiles = ("Thumbs.db",".DS_Store")
 
 if os.name == 'nt':
     #msvcrt can't function correctly in IDLE
@@ -72,12 +74,14 @@ def walktree(source,target):
     srclist = os.listdir(source)
     tarlist = os.listdir(target)
     for f in srclist:
+        if basename(f) in ignoreFiles: continue
         if f in tarlist:
             del tarlist[tarlist.index(f)]
             compare(join(source,f),join(target,f))
         else:
             copy(join(source,f),join(target,f))
     for f in tarlist:
+        if basename(f) in ignoreFiles: continue
         copy(join(target,f),join(source,f))
 
 if __name__ == '__main__':
