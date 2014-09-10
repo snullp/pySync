@@ -10,3 +10,5 @@
 picture: My Pictures
 download: Download
 archive: Archives
+#oldfiles will only be synced when both sides have the config, no matter if they have 'archive' defined or not
+oldfiles: Archives/Old
