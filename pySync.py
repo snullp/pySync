@@ -5,6 +5,9 @@ from os.path import *
 
 ignoreFiles = ("Thumbs.db",".DS_Store")
 
+#this feature is not yet implemented
+ignorePaths = []
+
 if os.name == 'nt':
     #msvcrt can't function correctly in IDLE
     if 'idlelib.run' in sys.modules:
@@ -37,17 +40,31 @@ def compare(fa,fb):
                     act='>'
                 else:
                     act='<'
-                s = flush_input('What to do?(>,<,n)['+act+']')
+                s = flush_input('What to do?(>,<,r,n)['+act+']')
                 if len(s)>0:
                     act=s[0]
                 if act=='>':
                     shutil.copy2(fa,fb)
                 elif act=='<':
                     shutil.copy2(fb,fa)
+                elif act=='r':
+                    if isdir(fa):
+                        shutil.rmtree(fa)
+                    elif isfile(fa):
+                        os.remove(fa)
+                    else:
+                        print('Remove: Skipping', fa)
+                    if isdir(fb):
+                        shutil.rmtree(fb)
+                    elif isfile(fb):
+                        os.remove(fb)
+                    else:
+                        print('Remove: Skipping', fb)
+
         else:
-            print('Comp: Skipping',fa)
+            print('Compare: Skipping non-dir and non-file',fa)
     else:
-        print('Error:',fa,',',fb,'have different protection bit')
+        print('Error:',fa,',',fb,'have different file type')
 
 def copy(fa,fb):
     s = flush_input('Copy '+fa+' to another side?(r,y,n)[y]')
@@ -61,28 +78,52 @@ def copy(fa,fb):
         elif isfile(fa):
             shutil.copy2(fa,fb)
         else:
-            print('DirCopy: Skipping ',fa)
+            print('Copy: Skipping ',fa)
     elif act =='r':
         if isdir(fa):
             shutil.rmtree(fa)
         elif isfile(fa):
             os.remove(fa)
         else:
-            print('FileCopy: Skipping ',fa)
+            print('Remove: Skipping ',fa)
+
+stoentry = []
+tarentry = []
 
 def walktree(source,target):
     srclist = os.listdir(source)
     tarlist = os.listdir(target)
+    if '!sync' in srclist: return
+    if '!sync' in tarlist: return
+    #files in source dir...
     for f in srclist:
-        if basename(f) in ignoreFiles: continue
+        if f in ignoreFiles: continue
+        spath = join(source,f)
+        tpath = join(target,f)
+        if spath in ignorePaths: continue
+        if spath in stoentry:
+            #just in case target also have this one
+            if f in tarlist: del tarlist[tarlist.index(f)]
+            continue
+
+        #if also exists in target dir
         if f in tarlist:
             del tarlist[tarlist.index(f)]
-            compare(join(source,f),join(target,f))
+            compare(spath,tpath)
+
+        #exists in source dir only
         else:
-            copy(join(source,f),join(target,f))
+            copy(spath,tpath)
+
+    #exists in target dir only
     for f in tarlist:
-        if basename(f) in ignoreFiles: continue
-        copy(join(target,f),join(source,f))
+        if f in ignoreFiles: continue
+        spath = join(source,f)
+        tpath = join(target,f)
+        if tpath in ignorePaths: continue
+        if tpath in tarentry:
+            continue
+        copy(tpath,spath)
 
 if __name__ == '__main__':
     stoconf = configparser.RawConfigParser()
@@ -91,17 +132,27 @@ if __name__ == '__main__':
     tarconf.read(expanduser("~/.pysync"))
     stoname = stoconf.sections()[0]
     tarname = tarconf.sections()[0]
+
+    #calculate storage's base folder
     if stoconf.has_option(stoname,'BASE'):
         stobase=abspath(stoconf.get(stoname,'BASE'))
         stoconf.remove_option(stoname,'BASE')
     else: stobase=os.getcwd()
+
+    #same, for target's base folder
     if tarconf.has_option(tarname,'BASE'):
         tarbase=abspath(tarconf.get(tarname,'BASE'))
         tarconf.remove_option(tarname,'BASE')
     else: tarbase=expanduser('~/')
+
     print("Syncing between",stoname,"and",tarname)
-    for folder in tarconf.options(tarname):
-        if stoconf.has_option(stoname,folder):
+    sto_content = {x:realpath(join(stobase,stoconf.get(stoname,x))) for x in stoconf.options(stoname)}
+    tar_content = {x:realpath(join(tarbase,tarconf.get(tarname,x))) for x in tarconf.options(tarname)}
+    stoentry = [sto_content[x] for x in sto_content]
+    tarentry = [tar_content[x] for x in tar_content]
+
+    for folder in sto_content:
+        if folder in tar_content:
             print('Processing',folder)
-            walktree(join(stobase,stoconf.get(stoname,folder)),join(tarbase,tarconf.get(tarname,folder)))
+            walktree(sto_content[folder],tar_content[folder])
     print("Done.")
